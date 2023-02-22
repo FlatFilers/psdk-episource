@@ -70,7 +70,7 @@ const claims = new Sheet('Claims', {
 
     provider_npi: ReferenceField({
       label: 'NPI of the provider',
-      sheetKey: 'Providers',
+      sheetKey: 'providers',
       foreignKey: 'npi',
       relationship: 'has-many'
     }),
