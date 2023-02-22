@@ -5,8 +5,8 @@ import {
 import { claimsWorkbook } from './sheets/claims'
 
 export default new SpaceConfig({
-  name: 'Claims Import (Eric)',
-  slug: 'claims-import-config',
+  name: 'Claims Import for Demo (Eric)',
+  slug: 'claims-import-demo',
   workbookConfigs: {
     claimsWorkbook
   },

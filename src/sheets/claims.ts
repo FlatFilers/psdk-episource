@@ -9,6 +9,7 @@ import {
 import { isNull } from 'lodash'
 import { SmartDateField } from '../../examples/fields/SmartDateField'
 
+
 const providers = new Sheet('Providers', {
   provider_name: TextField({
     label: 'Provider Name',
@@ -22,7 +23,7 @@ const providers = new Sheet('Providers', {
       return value.trim()
     },
     validate: (value: string): void | Message[] => {
-      const regex = new RegExp("^\d{10}$","i")
+      const regex = new RegExp("^[0-9]{10}$","i")
       if (!regex.test(value)) {
         throw 'Provider NPI must be 10 digits'
       }
@@ -56,7 +57,7 @@ const claims = new Sheet('Claims', {
         return value.trim()
       },
       validate: (value: string): void | Message[] => {
-        const regex = new RegExp('^[a-z0-9]+$',"i")
+        const regex = new RegExp('^[a-zA-Z0-9-_]+$',"i")
         if (!regex.test(value)) {
           throw 'MRN must only be alphanumeric characters'
         }
@@ -65,7 +66,8 @@ const claims = new Sheet('Claims', {
 
     claim_number: NumberField({
       label: 'Claim Number',
-      required: true
+      required: true,
+      unique: true
     }),
 
     provider_npi: ReferenceField({
@@ -90,18 +92,18 @@ const claims = new Sheet('Claims', {
   },
   {
     recordCompute:(record) => {
-      // const links = record.getLinks('provider_npi')
-      // // const dos = record.get('date_of_service')
-      // // const lastUpdated = links[0].last_updated
-      // const location = links[0].location
+      const links = record.getLinks('provider_npi')
+      const dos = record.get('date_of_service')
+      const lastUpdated = links[0].last_updated
+      const location = links[0].location
 
-      // // if (!!lastUpdated && !!dos && lastUpdated > dos) {
-      // //   record.addWarning('date_of_service','Provider record has been updated since claim date.')
-      // // }
+      if (!!lastUpdated && !!dos && dos < lastUpdated.getTime()) {
+        record.addWarning('date_of_service','Provider record has been updated since claim date.')
+      }
 
-      // if (!!location && isNull(record.get('service_location'))) {
-      //   record.set('service_location',location)
-      // }
+      if (!!location && isNull(record.get('service_location'))) {
+        record.set('service_location',location)
+      }
 
     }
   }
