@@ -1,13 +1,36 @@
 import {
     NumberField,
+    BooleanField,
     Sheet,
     Message,
     TextField,
     ReferenceField,
-    Workbook
+    Workbook,
+    OptionField
   } from '@flatfile/configure'
+
+import { FlatfileRecord, FlatfileRecords } from '@flatfile/hooks'
 import { isNull } from 'lodash'
 import { SmartDateField } from '../../examples/fields/SmartDateField'
+
+
+// import { Class } from external
+
+// const configSheet = new Sheet('Config',{
+//   provider_required: BooleanField({
+//     label: 'Should the provider be required?',
+//     default: true
+//   })
+//   regexNpi: TextField
+// }
+// )
+
+// const getConfig = new function (
+//   // function looks up all of the values in the config Workbook
+//   // function sets the config values in the providers and claims workbooks
+//   // use @flatfile/api
+//   // if provider_required has a value, then set the provider_name.required config option to that value
+// )
 
 
 const providers = new Sheet('Providers', {
@@ -87,6 +110,14 @@ const claims = new Sheet('Claims', {
     service_location: TextField({
       label: 'Location of Service',
       description: 'Pulled from the Provider Location if not provided'
+    }),
+
+    type_of_service: OptionField({
+      label: "Type of Service",
+      options: {
+        inpatient: "Inpatient",
+        outpatient: "Outpatient"
+      }
     })
 
   },
@@ -105,7 +136,19 @@ const claims = new Sheet('Claims', {
         record.set('service_location',location)
       }
 
-    }
+    },
+    batchRecordsCompute: async (payload: FlatfileRecords<any>) => {
+      const response = await fetch('https://api.us.flatfile.io/health', {
+        method: 'GET',
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+      const result = (await response.json()) as any
+      payload.records.map(async (record: FlatfileRecord) => {
+        record.set('fromHttp', result.info.postgres.status)
+      })
+    },
   }
 )
 
@@ -113,6 +156,7 @@ export const claimsWorkbook = new Workbook({
   name: 'Claims Import',
   slug: 'claims-import',
   sheets: {
+    // configWorkbook,
     providers,
     claims
   }
